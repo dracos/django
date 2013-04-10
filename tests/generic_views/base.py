@@ -403,8 +403,9 @@ class GetContextDataTest(unittest.TestCase):
         test_view = views.CustomContextView()
         context = test_view.get_context_data(kwarg_test='kwarg_value')
 
-        # the test_name key is inserted by the test classes parent
+        # the test_name and object keys are inserted by the test class's parent
         self.assertTrue('test_name' in context)
+        self.assertTrue('object' in context)
         self.assertEqual(context['kwarg_test'], 'kwarg_value')
         self.assertEqual(context['custom_key'], 'custom_value')
 

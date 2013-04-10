@@ -93,6 +93,8 @@ class SingleObjectMixin(ContextMixin):
         Insert the single object into the context dict.
         """
         context = {}
+        if self.object:
+            context['object'] = self.object
         context_object_name = self.get_context_object_name(self.object)
         if context_object_name:
             context[context_object_name] = self.object
@@ -106,7 +108,7 @@ class BaseDetailView(SingleObjectMixin, View):
     """
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        context = self.get_context_data(object=self.object)
+        context = self.get_context_data()
         return self.render_to_response(context)
 
 
