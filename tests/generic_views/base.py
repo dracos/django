@@ -411,3 +411,18 @@ class GetContextDataTest(unittest.TestCase):
         # test that kwarg overrides values assigned higher up
         context = test_view.get_context_data(test_name='test_value')
         self.assertEqual(context['test_name'], 'test_value')
+
+
+class UseMultipleObjectMixinTest(unittest.TestCase):
+
+    def test_use_multipleobjectmixin(self):
+        test_view = views.CustomMultipleObjectMixinView()
+        context = test_view.get_context_data()
+
+        # the test_name and object_list keys are inserted by the test class's parent
+        self.assertTrue('test_name' in context)
+        self.assertTrue('object_list' in context)
+
+        # test that kwarg overrides values assigned higher up
+        context = test_view.get_context_data(object_list='test_value')
+        self.assertEqual(context['object_list'], 'test_value')

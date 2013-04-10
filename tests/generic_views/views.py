@@ -192,6 +192,13 @@ class BookDetailGetObjectCustomQueryset(BookDetail):
         return super(BookDetailGetObjectCustomQueryset,self).get_object(
             queryset=Book.objects.filter(pk=2))
 
+class CustomMultipleObjectMixinView(generic.list.MultipleObjectMixin, generic.View):
+    model = Book
+    object_list = Book.objects.all()
+
+    def get_context_object_name(self, obj):
+        return "test_name"
+
 class CustomContextView(generic.detail.SingleObjectMixin, generic.View):
     model = Book
     object = Book(name='dummy')

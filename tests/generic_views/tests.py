@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 from .base import (ViewTest, TemplateViewTest, RedirectViewTest,
-    GetContextDataTest)
+    GetContextDataTest, UseMultipleObjectMixinTest)
 from .dates import (ArchiveIndexViewTests, YearArchiveViewTests,
     MonthArchiveViewTests, WeekArchiveViewTests, DayArchiveViewTests,
     DateDetailViewTests)
