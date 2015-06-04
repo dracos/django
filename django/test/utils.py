@@ -113,7 +113,6 @@ def setup_test_environment():
     Template._original_stream = Template._stream
     Template._stream = instrumented_test_stream
 
-
     # Storing previous values in the settings module itself is problematic.
     # Store them in arbitrary (but related) modules instead. See #20636.
 

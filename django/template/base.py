@@ -1001,7 +1001,7 @@ class NodeList(list):
                         yield mark_safe(force_text(bit))
                 else:
                     yield mark_safe(force_text(node))
-        except Exception as e:
+        except Exception:
             raise
 
     def get_nodes_by_type(self, nodetype):

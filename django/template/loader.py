@@ -121,8 +121,8 @@ def stream(template_name, context=None,
                             "when some deprecated arguments are passed.")
                         continue
                     # Hack -- use the internal Engine instance of DjangoTemplates.
-                    for chunk in  engine.engine.stream(
-                        template_name, context, context_instance, dirs, dictionary):
+                    for chunk in engine.engine.stream(
+                            template_name, context, context_instance, dirs, dictionary):
                         yield chunk
                     raise StopIteration
                 elif context_instance is not _context_instance_undefined:
