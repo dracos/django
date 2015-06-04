@@ -203,6 +203,13 @@ class Engine(object):
                          context_instance=_context_instance_undefined,
                          dirs=_dirs_undefined,
                          dictionary=_dictionary_undefined):
+        return ''.join(self.stream(template_name, context,
+                                   context_instance, dirs, dictionary))
+
+    def stream(self, template_name, context=None,
+               context_instance=_context_instance_undefined,
+               dirs=_dirs_undefined,
+               dictionary=_dictionary_undefined):
         if context_instance is _context_instance_undefined:
             context_instance = None
         else:
@@ -233,15 +240,21 @@ class Engine(object):
             # Django < 1.8 accepted a Context in `context` even though that's
             # unintended. Preserve this ability but don't rewrap `context`.
             if isinstance(context, Context):
-                return t.render(context)
+                stream = t.stream(context)
             else:
-                return t.render(Context(context))
-        if not context:
-            return t.render(context_instance)
-        # Add the context to the context stack, ensuring it gets removed again
-        # to keep the context_instance in the same state it started in.
-        with context_instance.push(context):
-            return t.render(context_instance)
+                stream = t.stream(Context(context))
+            for chunk in stream:
+                yield chunk
+        elif not context:
+            for chunk in t.stream(context_instance):
+                yield chunk
+        else:
+            # Add the context to the context stack, ensuring it gets removed again
+            # to keep the context_instance in the same state it started in.
+            with context_instance.push(context):
+                stream = t.stream(context_instance)
+                for chunk in stream:
+                    yield chunk
 
     def select_template(self, template_name_list, dirs=_dirs_undefined):
         """

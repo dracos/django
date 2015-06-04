@@ -62,6 +62,9 @@ class Template(object):
         return self.template.origin
 
     def render(self, context=None, request=None):
+        return ''.join(self.stream(context, request))
+
+    def stream(self, context=None, request=None):
         # A deprecation path is required here to cover the following usage:
         # >>> from django.template import Context
         # >>> from django.template.loader import get_template
@@ -92,7 +95,7 @@ class Template(object):
             context = make_context(context, request)
 
         try:
-            return self.template.render(context)
+            return self.template.stream(context)
         except TemplateDoesNotExist as exc:
             reraise(exc, self.backend)
 

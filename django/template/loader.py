@@ -81,6 +81,20 @@ def render_to_string(template_name, context=None,
 
     template_name may be a string or a list of strings.
     """
+    return ''.join(stream(template_name, context, context_instance,
+                          dirs, dictionary, request, using))
+
+
+def stream(template_name, context=None,
+           context_instance=_context_instance_undefined,
+           dirs=_dirs_undefined,
+           dictionary=_dictionary_undefined,
+           request=None, using=None):
+    """
+    Loads a template and renders it with a context. Returns a string generator.
+
+    template_name may be a string or a list of strings.
+    """
     if (context_instance is _context_instance_undefined
             and dirs is _dirs_undefined
             and dictionary is _dictionary_undefined):
@@ -89,8 +103,9 @@ def render_to_string(template_name, context=None,
             template = select_template(template_name, using=using)
         else:
             template = get_template(template_name, using=using)
-        return template.render(context, request)
-
+        for chunk in template.stream(context, request):
+            yield chunk
+        raise StopIteration
     else:
         chain = []
         # Some deprecated arguments were passed - use the legacy code path
@@ -106,8 +121,10 @@ def render_to_string(template_name, context=None,
                             "when some deprecated arguments are passed.")
                         continue
                     # Hack -- use the internal Engine instance of DjangoTemplates.
-                    return engine.engine.render_to_string(
-                        template_name, context, context_instance, dirs, dictionary)
+                    for chunk in  engine.engine.stream(
+                        template_name, context, context_instance, dirs, dictionary):
+                        yield chunk
+                    raise StopIteration
                 elif context_instance is not _context_instance_undefined:
                     warnings.warn(
                         "Skipping template backend %s because its render_to_string "

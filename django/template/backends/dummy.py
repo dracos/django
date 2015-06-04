@@ -53,6 +53,9 @@ class TemplateStrings(BaseEngine):
 class Template(string.Template):
 
     def render(self, context=None, request=None):
+        return ''.join(self.stream(context, request))
+
+    def stream(self, context=None, request=None):
         if context is None:
             context = {}
         else:
@@ -60,4 +63,4 @@ class Template(string.Template):
         if request is not None:
             context['csrf_input'] = csrf_input_lazy(request)
             context['csrf_token'] = csrf_token_lazy(request)
-        return self.safe_substitute(context)
+        yield self.safe_substitute(context)

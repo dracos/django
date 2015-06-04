@@ -203,6 +203,24 @@ class Template(object):
         finally:
             context.render_context.pop()
 
+    def _stream(self, context):
+        return self.nodelist.stream(context)
+
+    def stream(self, context):
+        "Display stage -- can be called many times"
+        context.render_context.push()
+        try:
+            if context.template is None:
+                with context.bind_template(self):
+                    context.template_name = self.name
+                    for chunk in self._stream(context):
+                        yield chunk
+            else:
+                for chunk in self._stream(context):
+                    yield chunk
+        finally:
+                context.render_context.pop()
+
     def compile_nodelist(self):
         """
         Parse and compile the template source into a nodelist. If debug
@@ -928,6 +946,27 @@ class Node(object):
                 e.template_debug = context.template.get_exception_info(e, self.token)
             raise
 
+    def stream(self, context):
+        """
+        Return a string generator rendering the node.
+        """
+        yield self.render(context)
+
+    def stream_annotated(self, context):
+        """
+        Render the node. If debug is True and an exception occurs during
+        rendering, the exception is annotated with contextual line information
+        where it occurred in the template. For internal usage this method is
+        preferred over using the render method directly.
+        """
+        try:
+            for chunk in self.stream(context):
+                yield chunk
+        except Exception as e:
+            if context.template.engine.debug and not hasattr(e, 'template_debug'):
+                e.template_debug = context.template.get_exception_info(e, self.token)
+            raise
+
     def __iter__(self):
         yield self
 
@@ -952,14 +991,18 @@ class NodeList(list):
     contains_nontext = False
 
     def render(self, context):
-        bits = []
-        for node in self:
-            if isinstance(node, Node):
-                bit = node.render_annotated(context)
-            else:
-                bit = node
-            bits.append(force_text(bit))
-        return mark_safe(''.join(bits))
+        return mark_safe(''.join(self.stream(context)))
+
+    def stream(self, context):
+        try:
+            for node in self:
+                if isinstance(node, Node):
+                    for bit in node.stream_annotated(context):
+                        yield mark_safe(force_text(bit))
+                else:
+                    yield mark_safe(force_text(node))
+        except Exception as e:
+            raise
 
     def get_nodes_by_type(self, nodetype):
         "Return a list of all nodes of the given type"
@@ -978,7 +1021,10 @@ class TextNode(Node):
                 errors='replace')
 
     def render(self, context):
-        return self.s
+        return ''.join(self.stream(context))
+
+    def stream(self, context):
+        yield self.s
 
 
 def render_value_in_context(value, context):
@@ -1005,14 +1051,17 @@ class VariableNode(Node):
         return "<Variable Node: %s>" % self.filter_expression
 
     def render(self, context):
+        return ''.join(self.stream(context))
+
+    def stream(self, context):
         try:
             output = self.filter_expression.resolve(context)
         except UnicodeDecodeError:
             # Unicode conversion can fail sometimes for reasons out of our
             # control (e.g. exception rendering). In that case, we fail
             # quietly.
-            return ''
-        return render_value_in_context(output, context)
+            yield ''
+        yield render_value_in_context(output, context)
 
 # Regex for token keyword arguments
 kwarg_re = re.compile(r"(?:(\w+)=)?(.+)")
