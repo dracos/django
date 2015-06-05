@@ -73,7 +73,6 @@ def stream_to_response(template_name, context=None,
                               dictionary, using)
 
 
-
 def request_context_response_with(func, request, template_name, context=None,
                                   context_instance=_context_instance_undefined,
                                   content_type=None, status=None,
