@@ -24,6 +24,29 @@ from django.utils.encoding import force_text
 from django.utils.functional import Promise
 
 
+def http_response_with(func, template_name, context=None,
+                       context_instance=_context_instance_undefined,
+                       content_type=None, status=None, dirs=_dirs_undefined,
+                       dictionary=_dictionary_undefined, using=None):
+    """
+    Returns a HttpResponse whose content is filled with the result of calling
+    func() with the passed arguments.
+    """
+    if (context_instance is _context_instance_undefined
+            and dirs is _dirs_undefined
+            and dictionary is _dictionary_undefined):
+        # No deprecated arguments were passed - use the new code path
+        content = func(template_name, context, using=using)
+
+    else:
+        # Some deprecated arguments were passed - use the legacy code path
+        content = func(
+            template_name, context, context_instance, dirs, dictionary,
+            using=using)
+
+    return HttpResponse(content, content_type, status)
+
+
 def render_to_response(template_name, context=None,
                        context_instance=_context_instance_undefined,
                        content_type=None, status=None, dirs=_dirs_undefined,
@@ -32,29 +55,34 @@ def render_to_response(template_name, context=None,
     Returns a HttpResponse whose content is filled with the result of calling
     django.template.loader.render_to_string() with the passed arguments.
     """
-    if (context_instance is _context_instance_undefined
-            and dirs is _dirs_undefined
-            and dictionary is _dictionary_undefined):
-        # No deprecated arguments were passed - use the new code path
-        content = loader.render_to_string(template_name, context, using=using)
-
-    else:
-        # Some deprecated arguments were passed - use the legacy code path
-        content = loader.render_to_string(
-            template_name, context, context_instance, dirs, dictionary,
-            using=using)
-
-    return HttpResponse(content, content_type, status)
+    return http_response_with(loader.render_to_string, template_name, context,
+                              context_instance, content_type, status, dirs,
+                              dictionary, using)
 
 
-def render(request, template_name, context=None,
-           context_instance=_context_instance_undefined,
-           content_type=None, status=None, current_app=_current_app_undefined,
-           dirs=_dirs_undefined, dictionary=_dictionary_undefined,
-           using=None):
+def stream_to_response(template_name, context=None,
+                       context_instance=_context_instance_undefined,
+                       content_type=None, status=None, dirs=_dirs_undefined,
+                       dictionary=_dictionary_undefined, using=None):
     """
     Returns a HttpResponse whose content is filled with the result of calling
-    django.template.loader.render_to_string() with the passed arguments.
+    django.template.loader.stream() with the passed arguments.
+    """
+    return http_response_with(loader.stream, template_name, context,
+                              context_instance, content_type, status, dirs,
+                              dictionary, using)
+
+
+
+def request_context_response_with(func, request, template_name, context=None,
+                                  context_instance=_context_instance_undefined,
+                                  content_type=None, status=None,
+                                  current_app=_current_app_undefined,
+                                  dirs=_dirs_undefined, dictionary=_dictionary_undefined,
+                                  using=None):
+    """
+    Returns a HttpResponse whose content is filled with the result of calling
+    func() with the passed arguments.
     Uses a RequestContext by default.
     """
     if (context_instance is _context_instance_undefined
@@ -63,7 +91,7 @@ def render(request, template_name, context=None,
             and dictionary is _dictionary_undefined):
         # No deprecated arguments were passed - use the new code path
         # In Django 2.0, request should become a positional argument.
-        content = loader.render_to_string(
+        content = func(
             template_name, context, request=request, using=using)
 
     else:
@@ -84,11 +112,43 @@ def render(request, template_name, context=None,
                 # warning in RequestContext.__init__.
                 context_instance._current_app = current_app
 
-        content = loader.render_to_string(
+        content = func(
             template_name, context, context_instance, dirs, dictionary,
             using=using)
 
     return HttpResponse(content, content_type, status)
+
+
+def render(request, template_name, context=None,
+           context_instance=_context_instance_undefined,
+           content_type=None, status=None, current_app=_current_app_undefined,
+           dirs=_dirs_undefined, dictionary=_dictionary_undefined,
+           using=None):
+    """
+    Returns a HttpResponse whose content is filled with the result of calling
+    django.template.loader.render_to_string() with the passed arguments.
+    Uses a RequestContext by default.
+    """
+    return request_context_response_with(loader.render_to_string, request,
+                                         template_name, context,
+                                         context_instance, content_type, status,
+                                         current_app, dirs, dictionary, using)
+
+
+def stream(request, template_name, context=None,
+           context_instance=_context_instance_undefined,
+           content_type=None, status=None, current_app=_current_app_undefined,
+           dirs=_dirs_undefined, dictionary=_dictionary_undefined,
+           using=None):
+    """
+    Returns a HttpResponse whose content is filled with the result of calling
+    django.template.loader.stream() with the passed arguments.
+    Uses a RequestContext by default.
+    """
+    return request_context_response_with(loader.stream, request,
+                                         template_name, context,
+                                         context_instance, content_type, status,
+                                         current_app, dirs, dictionary, using)
 
 
 def redirect(to, *args, **kwargs):
