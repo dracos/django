@@ -285,6 +285,11 @@ Templates
   the ability to register libraries and builtins explicitly through the
   template :setting:`OPTIONS <TEMPLATES-OPTIONS>`.
 
+* Support for iterating over
+  :class:`~django.template.backends.django.DjangoTemplates` was added. This
+  includes a ``stream`` method on Template objects, a ``stream`` function on
+  django.template.loader, and ``stream_to_response`` and ``stream`` shortcuts.
+
 Requests and Responses
 ^^^^^^^^^^^^^^^^^^^^^^
 

@@ -114,6 +114,23 @@ This example is equivalent to::
         return HttpResponse(t.render(c),
             content_type="application/xhtml+xml")
 
+``stream``
+==========
+
+.. function:: stream(request, template_name[, context][, context_instance][, content_type][, status][, current_app][, dirs][, using])
+
+   Combines a given template with a given context dictionary and returns an
+   :class:`~django.http.HttpResponse` object with that rendered text. (XXX)
+
+   :func:`stream()` is the same as a call to
+   :func:`stream_to_response()` with a ``context_instance`` argument that
+   forces the use of a :class:`~django.template.RequestContext`.
+
+Arguments
+---------
+
+Same as :func:`~django.shortcuts.render`.
+
 ``render_to_response``
 ======================
 
@@ -203,6 +220,19 @@ This example is equivalent to::
         c = Context({'foo': 'bar'})
         return HttpResponse(t.render(c),
             content_type="application/xhtml+xml")
+
+``stream_to_response``
+======================
+
+.. function:: stream_to_response(template_name[, context][, context_instance][, content_type][, status][, dirs][, using])
+
+   Renders a given template with a given context dictionary and returns an
+   :class:`~django.http.HttpResponse` object with that rendered text. (XXX)
+
+Arguments
+---------
+
+Same as :func:`~django.shortcuts.render_to_response`.
 
 ``redirect``
 ============

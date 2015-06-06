@@ -236,6 +236,11 @@ different contexts.
         >>> template.render(context)
         "My name is Dolores."
 
+.. method:: Template.stream(context)
+
+    Call the :class:`Template` object's ``stream()`` method with a
+    :class:`Context` to create a generator of the template.
+
 Variables and lookups
 ---------------------
 

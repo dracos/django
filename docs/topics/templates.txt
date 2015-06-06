@@ -197,6 +197,17 @@ must provide a ``render()`` method with the following signature:
     Then the engine must make it, as well as the CSRF token, available in the
     template. How this is achieved is up to each backend.
 
+.. method:: Template.stream(context=None, request=None)
+
+    Returns a generator for rendering this template with a given context.
+
+    If ``context`` is provided, it must be a :class:`dict`. If it isn't
+    provided, the engine will render the template with an empty context.
+
+    If ``request`` is provided, it must be an :class:`~django.http.HttpRequest`.
+    Then the engine must make it, as well as the CSRF token, available in the
+    template. How this is achieved is up to each backend.
+
 Here's an example of the search algorithm. For this example the
 :setting:`TEMPLATES` setting is::
 
@@ -267,7 +278,9 @@ the following templates:
 .. currentmodule:: django.template.loader
 
 In addition, to cut down on the repetitive nature of loading and rendering
-templates, Django provides a shortcut function which automates the process.
+templates, Django provides two shortcut functions which automate the process.
+They perform the same function, ``stream`` being a generator of the parsed
+template, ``render_to_string`` returning a string of the output.
 
 .. function:: render_to_string(template_name[, context][, context_instance][, request][, using])
 
@@ -313,6 +326,17 @@ See also the :func:`~django.shortcuts.render()` and
 :func:`~django.shortcuts.render_to_response()` shortcuts, which call
 :func:`render_to_string()` and feed the result into an
 :class:`~django.http.HttpResponse` suitable for returning from a view.
+
+.. function:: stream(template_name[, context][, context_instance][, request][, using])
+
+    ``stream()`` loads a template like :func:`get_template` and
+    calls its ``stream()`` method immediately. It takes the same arguments as
+    :func:`~django.template.loader.render_to_string`
+
+See also the :func:`~django.shortcuts.stream()` and
+:func:`~django.shortcuts.stream_to_response()` shortcuts, which call
+:func:`stream()` and feed the result into an :class:`~django.http.HttpResponse`
+(XXX) suitable for returning from a view.
 
 Finally, you can use configured engines directly:
 
