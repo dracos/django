@@ -432,6 +432,8 @@ class SQLCompiler:
                         *self.query.annotation_select,
                     ))
                 part_sql, part_args = compiler.as_sql()
+                if combinator == 'union' and not compiler.query.combinator:
+                    part_sql = '({})'.format(part_sql)
                 if compiler.query.combinator:
                     # Wrap in a subquery if wrapping in parentheses isn't
                     # supported.
@@ -453,7 +455,7 @@ class SQLCompiler:
         combinator_sql = self.connection.ops.set_operators[combinator]
         if all and combinator == 'union':
             combinator_sql += ' ALL'
-        braces = '({})' if features.supports_slicing_ordering_in_compound else '{}'
+        braces = '({})' if features.supports_slicing_ordering_in_compound and combinator != 'union' else '{}'
         sql_parts, args_parts = zip(*((braces.format(sql), args) for sql, args in parts))
         result = [' {} '.format(combinator_sql).join(sql_parts)]
         params = []
